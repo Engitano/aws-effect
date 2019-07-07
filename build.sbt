@@ -22,6 +22,7 @@ lazy val `aws-effect-common` = (project in file("common"))
   .settings(Common())
   .settings(bintrayPackageLabels ++= Seq("aws"))
   .settings(
+    version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
     libraryDependencies ++= Seq(
       Dependencies.catsEffect,
       Dependencies.circe,
@@ -34,6 +35,7 @@ lazy val `aws-effect-sqs` = (project in file("sqs"))
   .settings(Common())
   .settings(bintrayPackageLabels ++= Seq("aws", "sqs"))
   .settings(
+    version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
     libraryDependencies ++= Seq(
       Dependencies.catsEffect,
       Dependencies.fs2,
@@ -47,6 +49,7 @@ lazy val `aws-effect-sns` = (project in file("sns"))
   .settings(Common())
   .settings(bintrayPackageLabels ++= Seq("aws", "sns"))
   .settings(
+    version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
     libraryDependencies ++= Seq(
       Dependencies.catsEffect,
       Dependencies.fs2,
