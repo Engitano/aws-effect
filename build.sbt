@@ -16,7 +16,12 @@ writeVersion := {
 
 test in publish := {}
 
-lazy val root = (project in file(".")).aggregate(`aws-effect-sqs`, `aws-effect-sns`, `aws-lambda-effect`).settings(Common())
+lazy val root = (project in file("."))
+  .aggregate(`aws-effect-sqs`, `aws-effect-sns`, `aws-lambda-effect`)
+  .settings(Common())
+  .settings(
+    skip in publish := true
+  )
 
 lazy val `aws-effect-common` = (project in file("common"))
   .settings(Common())
