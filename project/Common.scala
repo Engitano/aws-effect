@@ -9,6 +9,7 @@ object Common {
   val supportedScalaVersions = List(scala213, scala212)
 
   def apply() = Seq(
+    version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
     scalaVersion := scala213,
     organization := "com.engitano",
     organizationName := "Engitano",
