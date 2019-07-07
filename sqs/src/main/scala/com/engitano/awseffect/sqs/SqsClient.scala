@@ -8,12 +8,12 @@ import cats.syntax.traverse._
 import com.engitano.awseffect.concurrent._
 import com.engitano.awseffect.marshalling.Marshaller
 import com.engitano.awseffect.messaging.MessageAttributeValue
+import com.engitano.awseffect.JDKCollectionConvertersCompat.Converters._
 import fs2._
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.{DeleteMessageRequest, SendMessageRequest}
 
 import scala.concurrent.duration.FiniteDuration
-import scala.jdk.CollectionConverters._
 
 trait SqsClient[F[_]] {
 

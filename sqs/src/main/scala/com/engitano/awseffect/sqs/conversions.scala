@@ -3,11 +3,11 @@ package com.engitano.awseffect.sqs
 import com.engitano.awseffect.messaging.MessageAttributeValue
 import com.engitano.awseffect.messaging.MessageAttributeValue.{Binary, StringList}
 import com.engitano.awseffect.sqs.MessageSystemAttributeName._
+import com.engitano.awseffect.JDKCollectionConvertersCompat.Converters._
 import software.amazon.awssdk.core.SdkBytes
 import software.amazon.awssdk.services.sqs.model.{Message => AwsMsg, MessageAttributeValue => AwsMav, MessageSystemAttributeName => AwsMsan}
 
 import scala.collection.mutable
-import scala.jdk.CollectionConverters._
 
 object conversions {
 
@@ -46,7 +46,7 @@ object conversions {
         msg.body(),
         msg.attributes().asScala.toMap.map(p => p._1.asScala -> p._2),
         msg.md5OfMessageAttributes(),
-        msg.messageAttributes().asScala.toMap.view.mapValues(v => v.asScala).toMap
+        msg.messageAttributes().asScala.toMap.mapValues(v => v.asScala).toMap
       )
   }
 

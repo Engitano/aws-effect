@@ -2,6 +2,7 @@ package com.engitano.awseffect.sns
 
 import cats.syntax.functor._
 import cats.effect.Async
+import com.engitano.awseffect.JDKCollectionConvertersCompat.Converters._
 import com.engitano.awseffect.messaging.MessageAttributeValue
 import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -10,8 +11,6 @@ import io.circe.syntax._
 import com.engitano.awseffect.concurrent._
 import com.engitano.awseffect.sns.conversions._
 import com.engitano.awseffect.syntax.builder._
-
-import scala.jdk.CollectionConverters._
 
 trait SnsClient[F[_]] {}
 
