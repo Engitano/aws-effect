@@ -17,7 +17,7 @@ writeVersion := {
 test in publish := {}
 
 lazy val root = (project in file("."))
-  .aggregate(`aws-effect-sqs`, `aws-effect-sns`, `aws-lambda-effect`)
+  .aggregate(`aws-effect-common`, `aws-effect-sqs`, `aws-effect-sns`, `aws-lambda-effect`)
   .settings(Common())
   .settings(
     skip in publish := true
@@ -31,7 +31,9 @@ lazy val `aws-effect-common` = (project in file("common"))
     libraryDependencies ++= Seq(
       Dependencies.catsEffect,
       Dependencies.circe,
-      Dependencies.circeAuto
+      Dependencies.circeAuto,
+      Dependencies.catsTestkit         % Test,
+      Dependencies.scalacheckShapeless % Test
     )
   )
   .settings(addCompilerPlugin(kindProjector))
@@ -77,10 +79,8 @@ lazy val `aws-lambda-effect` = (project in file("lambda"))
       Dependencies.fs2io,
       Dependencies.lambda,
       Dependencies.slf4j,
-      Dependencies.scalatest           % Test,
-      Dependencies.scalamock           % Test,
-      Dependencies.catsTestkit         % Test,
-      Dependencies.scalacheckShapeless % Test
+      Dependencies.scalatest % Test,
+      Dependencies.scalamock % Test
     )
   )
   .settings(addCompilerPlugin(kindProjector))

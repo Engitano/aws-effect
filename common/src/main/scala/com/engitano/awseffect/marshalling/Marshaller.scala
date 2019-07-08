@@ -1,8 +1,10 @@
 package com.engitano.awseffect.marshalling
 
-import cats.{Applicative, Contravariant, Functor, Monad}
+import cats.{Alternative, Applicative, ApplicativeError, Contravariant, Functor, Monad}
 import cats.arrow.Profunctor
+import cats.syntax.apply._
 import cats.syntax.applicative._
+import cats.syntax.applicativeError._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.option._
@@ -27,6 +29,14 @@ object Marshaller {
   implicit def idMarshaller[F[_]: Applicative, A]: Marshaller[F, A, A] = new Marshaller[F, A, A] {
     override def marshall(t: A): F[A] = Applicative[F].pure(t)
   }
+
+  case class FromPartiallyApplied[F[_], A](dummy: Boolean = false) extends AnyVal {
+    def apply[B](f: A => F[B]): Marshaller[F, A, B] = new Marshaller[F, A, B] {
+      override def marshall(t: A): F[B] = f(t)
+    }
+  }
+
+  implicit def from[F[_], A] = FromPartiallyApplied[F, A]()
 }
 
 trait Marshaller[F[_], -From, To] {
@@ -44,7 +54,7 @@ trait Marshaller[F[_], -From, To] {
     }
 }
 
-trait MarshallInstances {
+trait MarshallInstances extends MarshallInstances0 {
 
   implicit def catsDataContravariatFromMarshaller[F[_], T]: Contravariant[Marshaller[F, ?, T]] =
     new Contravariant[Marshaller[F, ?, T]] {
@@ -58,10 +68,9 @@ trait MarshallInstances {
       fab.map(g).contramap(f)
   }
 
-  implicit def catsDataFlatMapForMarshaller[F[_]: Monad, T] =
-    new Monad[Marshaller[F, T, ?]]  {
+  implicit def catsDataMonadForMarshaller[F[_]: Monad, T] =
+    new Monad[Marshaller[F, T, ?]] {
       override def pure[A](x: A): Marshaller[F, T, A] = Marshaller.pure[F, T](x)
-
 
       override def flatMap[A, B](fa: Marshaller[F, T, A])(f: A => Marshaller[F, T, B]): Marshaller[F, T, B] = new Marshaller[F, T, B] {
         override def marshall(t: T): F[B] = fa.marshall(t).flatMap(a => f(a).marshall(t))
@@ -71,5 +80,23 @@ trait MarshallInstances {
         case Left(aa) => tailRecM(aa)(f)
         case Right(b) => pure(b)
       }
+    }
+}
+
+trait MarshallInstances0 {
+
+  implicit def catsDataAlternativeForMarshaller[F[_]: ApplicativeError[?[_], Throwable], T](implicit A: Applicative[Marshaller[F, T, ?]]) =
+    new Alternative[Marshaller[F, T, ?]]  {
+      override def empty[A]: Marshaller[F, T, A] = Marshaller.from[F, T](_ => MarshallingException("Empty Marshaller always fails").raiseError[F,A])
+
+      override def combineK[A](x: Marshaller[F, T, A], y: Marshaller[F, T, A]): Marshaller[F, T, A] = new Marshaller[F, T, A] {
+        override def marshall(t: T): F[A] =
+          x.marshall(t).handleErrorWith(_ => y.marshall(t))
+      }
+
+      override def pure[A](x: A): Marshaller[F, T, A] = A.pure(x)
+
+      override def ap[A, B](ff: Marshaller[F, T, A => B])(fa: Marshaller[F, T, A]): Marshaller[F, T, B] = A.ap(ff)(fa)
+
     }
 }
