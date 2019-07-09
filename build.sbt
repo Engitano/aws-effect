@@ -17,7 +17,7 @@ writeVersion := {
 test in publish := {}
 
 lazy val root = (project in file("."))
-  .aggregate(`aws-effect-common`, `aws-effect-sqs`, `aws-effect-sns`, `aws-lambda-effect`)
+  .aggregate(`aws-effect-common`, `aws-effect-sqs`, `aws-effect-sns`, `aws-effect-lambda`)
   .settings(Common())
   .settings(
     skip in publish := true
@@ -66,7 +66,7 @@ lazy val `aws-effect-sns` = (project in file("sns"))
   .settings(addCompilerPlugin(kindProjector))
   .dependsOn(`aws-effect-common`)
 
-lazy val `aws-lambda-effect` = (project in file("lambda"))
+lazy val `aws-effect-lambda` = (project in file("lambda"))
   .settings(Common())
   .settings(bintrayPackageLabels ++= Seq("aws", "lambda"))
   .settings(
