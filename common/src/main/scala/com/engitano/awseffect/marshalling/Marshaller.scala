@@ -39,7 +39,7 @@ object Marshaller {
   implicit def from[F[_], A] = FromPartiallyApplied[F, A]()
 }
 
-trait Marshaller[F[_], -From, To] {
+trait Marshaller[F[_], From, To] {
   self =>
   def marshall(t: From): F[To]
 
