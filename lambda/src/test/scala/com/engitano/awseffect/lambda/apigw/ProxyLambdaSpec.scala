@@ -40,7 +40,7 @@ class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
       val inputStream =
         new ByteArrayInputStream(Messages.requestWithInputName.getBytes)
       val output = new ByteArrayOutputStream()
-      sut.handle(inputStream, output, mock[Context])
+      sut.handleRequest(inputStream, output, mock[Context])
       val respJson = output.toString
       val response = decode[ProxyResponse](respJson)
       response should matchPattern {

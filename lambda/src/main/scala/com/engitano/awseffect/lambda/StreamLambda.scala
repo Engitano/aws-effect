@@ -6,13 +6,13 @@ import java.util.concurrent.Executors
 import cats.implicits._
 import cats.effect.implicits._
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, Resource, Sync}
-import com.amazonaws.services.lambda.runtime.Context
+import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import fs2.Pipe
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 
-abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] {
+abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] extends RequestStreamHandler{
 
   import StreamLambda._
 
@@ -44,7 +44,7 @@ abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] {
         .as(())
     }
 
-  final def handle(
+  override def handleRequest(
       input: InputStream,
       output: OutputStream,
       context: Context
