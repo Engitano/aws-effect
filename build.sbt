@@ -86,3 +86,15 @@ lazy val `aws-effect-lambda` = (project in file("lambda"))
   )
   .settings(addCompilerPlugin(kindProjector))
   .dependsOn(`aws-effect-common`)
+
+lazy val `aws-effect-lambda-http4s` = (project in file("lambda-http4s"))
+  .settings(Common())
+  .settings(bintrayPackageLabels ++= Seq("aws", "lambda", "http4s"))
+  .settings(
+    version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
+    libraryDependencies ++= Seq(
+      Dependencies.http4sCore
+    )
+  )
+  .settings(addCompilerPlugin(kindProjector))
+  .dependsOn(`aws-effect-lambda`)

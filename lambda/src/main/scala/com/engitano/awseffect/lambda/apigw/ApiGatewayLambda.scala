@@ -6,3 +6,4 @@ import io.circe.generic.auto._
 
 
 abstract class ApiGatewayLambda[F[_]: ConcurrentEffect: ContextShift] extends EffectfulLambda[F, ProxyRequest, ProxyResponse]
+

@@ -47,6 +47,6 @@ case class ProxyRequest(
 case class ProxyResponse(
     statusCode: Int,
     body: Option[String],
-    headers: Option[Map[String, String]] = None,
+    headers: Map[String, String] = Map(),
     isBase64Encoded: Boolean = false
 )

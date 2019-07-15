@@ -15,13 +15,13 @@ trait Dsl[F[_]] {
     buildResponse(204, a)
 
   def movedPermanently(location: String)(implicit F: Sync[F]): F[ProxyResponse] =
-    F.pure(ProxyResponse(301, None, Some(Map("location" -> location))))
+    F.pure(ProxyResponse(301, None, Map("location" -> location)))
   def found(location: String) =
-    ProxyResponse(302, None, Some(Map("location" -> location)))
+    ProxyResponse(302, None, Map("location" -> location))
   def temporaryRedirect(location: String)(implicit F: Sync[F]): F[ProxyResponse] =
-    F.pure(ProxyResponse(307, None, Some(Map("location" -> location))))
+    F.pure(ProxyResponse(307, None, Map("location" -> location)))
   def permanentRedirect(location: String)(implicit F: Sync[F]): F[ProxyResponse] =
-    F.pure(ProxyResponse(308, None, Some(Map("location" -> location))))
+    F.pure(ProxyResponse(308, None, Map("location" -> location)))
 
   def badRequest[A: Marshaller[F, ?, String]](a: A)(implicit F: Sync[F]): F[ProxyResponse] =
     buildResponse(400, a)
@@ -35,7 +35,7 @@ trait Dsl[F[_]] {
       ProxyResponse(
         code,
         b.some,
-        Some(Map("content-type" -> "application/json"))
+        Map("content-type" -> "application/json")
       )
     }
   implicit class SyntaxForRequest(req: ProxyRequest) {
