@@ -17,7 +17,7 @@ writeVersion := {
 test in publish := {}
 
 lazy val root = (project in file("."))
-  .aggregate(`aws-effect-common`, `aws-effect-sqs`, `aws-effect-sns`, `aws-effect-lambda`)
+  .aggregate(`aws-effect-common`, `aws-effect-sqs`, `aws-effect-sns`, `aws-effect-lambda`, `aws-effect-lambda-http4s`)
   .settings(Common())
   .settings(
     version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",

@@ -9,6 +9,7 @@ import com.engitano.awseffect.lambda.apigw.{ApiGatewayLambda, ProxyRequest, Prox
 import fs2.Stream
 import org.http4s._
 
+// Mad props to https://github.com/howardjohn/scala-server-lambda
 class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: HttpRoutes[F]) extends ApiGatewayLambda[F] {
 
   private val F = ConcurrentEffect[F]
@@ -23,7 +24,7 @@ class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: HttpRoutes[F]) e
 
   private def parseRequest(request: ProxyRequest): F[Request[F]] = F.fromEither {
     for {
-      uri <- Uri.fromString(reconstructPath(request))
+      uri    <- Uri.fromString(reconstructPath(request))
       method <- Method.fromString(request.httpMethod)
     } yield
       Request[F](
