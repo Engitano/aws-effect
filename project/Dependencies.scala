@@ -13,7 +13,7 @@ object Dependencies {
     val scalatestV = "3.0.8"
     val awsV       = "2.7.0"
     val http4sV    = "0.21.0-M2"
-  }x
+  }
 
   import Versions._
   val catsEffect = "org.typelevel"          %% "cats-effect"         % catsV

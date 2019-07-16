@@ -17,3 +17,5 @@ project/plugins/project/
 *.log
 version.txt
 *.asc
+.metals/metals.h2.db
+.metals/metals.lock.db
