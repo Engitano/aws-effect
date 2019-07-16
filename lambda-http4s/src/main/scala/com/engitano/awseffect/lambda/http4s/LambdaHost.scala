@@ -1,6 +1,7 @@
 package com.engitano.awseffect.lambda.http4s
 
 import cats.effect.{ConcurrentEffect, ContextShift}
+import cats.syntax.apply._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.option._
@@ -10,14 +11,14 @@ import fs2.Stream
 import org.http4s._
 
 // Mad props to https://github.com/howardjohn/scala-server-lambda
-class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: HttpRoutes[F]) extends ApiGatewayLambda[F] {
+class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: F[HttpRoutes[F]]) extends ApiGatewayLambda[F] {
 
   private val F = ConcurrentEffect[F]
 
   override protected def handle(req: ProxyRequest, c: Context): F[ProxyResponse] =
-    parseRequest(req).flatMap { r =>
-      service
-        .run(r)
+    (parseRequest(req), service).tupled.flatMap { case (req, svc) =>
+      svc
+        .run(req)
         .getOrElse(Response.notFound)
         .flatMap(asProxyResponse)
     }
