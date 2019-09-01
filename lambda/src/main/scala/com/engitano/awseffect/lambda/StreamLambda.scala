@@ -22,19 +22,19 @@ abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] extends Reques
 
   protected def threadPool: Resource[F, ExecutionContext] =
     Resource(F.delay {
-      val executor = Executors.newCachedThreadPool()
+      val executor = Executors.newSingleThreadExecutor()
       val ec       = ExecutionContext.fromExecutor(executor)
       (ec, F.delay(executor.shutdown()))
     })
 
-  protected def handle(c: Context): Pipe[F, Byte, Byte]
+  protected def handle(c: Context)(implicit ec: ExecutionContext): Pipe[F, Byte, Byte]
 
   private def handleCore(
       input: InputStream,
       output: OutputStream,
       context: Context
   ): F[Unit] =
-    threadPool.use { ec =>
+    threadPool.use { implicit ec =>
       _root_.fs2.io
         .readInputStream(F.delay(input), input.available(), Blocker.liftExecutionContext(ec))
         .through(handle(context))
