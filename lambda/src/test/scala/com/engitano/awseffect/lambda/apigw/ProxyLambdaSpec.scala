@@ -28,7 +28,7 @@ class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
         override protected def handle(
             i: ProxyRequest,
             c: Context
-        ): IO[ProxyResponse] =
+        )(implicit ec: ExecutionContext): IO[ProxyResponse] =
           i.as[Input].map { ip =>
             ProxyResponse(
               200,
