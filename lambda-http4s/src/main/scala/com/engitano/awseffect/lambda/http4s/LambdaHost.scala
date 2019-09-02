@@ -13,13 +13,13 @@ import org.http4s._
 import scala.concurrent.ExecutionContext
 
 // Mad props to https://github.com/howardjohn/scala-server-lambda
-class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: F[HttpRoutes[F]]) extends ApiGatewayLambda[F] {
+class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: HttpRoutes[F]) extends ApiGatewayLambda[F] {
 
   private val F = ConcurrentEffect[F]
 
   override protected def handle(req: ProxyRequest, c: Context)(implicit ec: ExecutionContext): F[ProxyResponse] =
-    (parseRequest(req), service).tupled.flatMap { case (req, svc) =>
-      svc
+    parseRequest(req).flatMap { req =>
+      service
         .run(req)
         .getOrElse(Response.notFound)
         .flatMap(asProxyResponse)

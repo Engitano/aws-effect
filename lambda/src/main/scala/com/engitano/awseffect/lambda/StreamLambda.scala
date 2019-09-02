@@ -10,7 +10,6 @@ import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import fs2.Pipe
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 
