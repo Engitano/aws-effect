@@ -6,19 +6,20 @@ import java.util.concurrent.Executors
 import cats.implicits._
 import cats.effect.implicits._
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, Resource, Sync}
+import io.chrisdavenport.log4cats.Logger
+import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import fs2.Pipe
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 
-abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] extends RequestStreamHandler{
+abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] extends RequestStreamHandler {
 
-  import StreamLambda._
+  implicit def unsafeLogger[F[_]: Sync] = Slf4jLogger.getLogger[F]
+  protected val logger                  = Logger[F]
 
   private val F = ConcurrentEffect[F]
-
-  protected val errorLogger: (String, Option[Throwable]) => F[Unit] = Logger.error[F]
 
   protected def threadPool: Resource[F, ExecutionContext] =
     Resource(F.delay {
@@ -49,28 +50,13 @@ abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] extends Reques
       output: OutputStream,
       context: Context
   ): Unit =
-    handleCore(input, output, context)
-      .handleErrorWith { t =>
-        errorLogger(
-          s"Error while executing lambda: ${t.getMessage}",
-          Some(t)
-        ) *>
-          F.raiseError(t)
-      }
-      .toIO
+    (logger.info("Beginning handler fn") *>
+      handleCore(input, output, context)
+        .handleErrorWith { t =>
+          logger.error(t)(
+            s"Error while executing lambda: ${t.getMessage}"
+          ) *>
+            F.raiseError(t)
+        } <* logger.info("Function complete")).toIO
       .unsafeRunSync()
-}
-
-object StreamLambda {
-  private val logger = LoggerFactory.getLogger(getClass)
-
-  private object Logger {
-    def debug[F[_]: Sync](msg: String) = Sync[F].delay(logger.debug(msg))
-    def info[F[_]: Sync](msg: String)  = Sync[F].delay(logger.info(msg))
-    def warn[F[_]: Sync](msg: String)  = Sync[F].delay(logger.warn(msg))
-    def error[F[_]: Sync](msg: String, t: Option[Throwable]) =
-      t.fold(Sync[F].delay(logger.error(msg)))(
-        t => Sync[F].delay(logger.error(msg, t))
-      )
-  }
 }

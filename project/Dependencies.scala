@@ -13,6 +13,7 @@ object Dependencies {
     val scalatestV = "3.0.8"
     val awsV       = "2.7.0"
     val http4sV    = "0.21.0-M2"
+    val log4catsV  = "1.0.0-RC3"
   }
 
   import Versions._
@@ -26,6 +27,7 @@ object Dependencies {
   val slf4j      = "org.slf4j"              % "slf4j-api"            % slf4jV
   val sqs        = "software.amazon.awssdk" % "sqs"                  % awsV
   val sns        = "software.amazon.awssdk" % "sns"                  % awsV
+  val log4cats   = "io.chrisdavenport"      %% "log4cats-slf4j"      % log4catsV
 
   val http4sCore  = "org.http4s" %% "http4s-core"  % http4sV
   val http4sDsl   = "org.http4s" %% "http4s-dsl"   % http4sV

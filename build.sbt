@@ -79,6 +79,7 @@ lazy val `aws-effect-lambda` = (project in file("lambda"))
       Dependencies.circeFs2,
       Dependencies.fs2io,
       Dependencies.lambda,
+      Dependencies.log4cats,
       Dependencies.slf4j,
       Dependencies.scalatest % Test,
       Dependencies.scalamock % Test
