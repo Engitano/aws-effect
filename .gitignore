@@ -19,3 +19,5 @@ version.txt
 *.asc
 .metals/metals.h2.db
 .metals/metals.lock.db
+.bloop/
+.metals/

@@ -22,7 +22,7 @@ abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] extends Reques
 
   protected def threadPool: Resource[F, ExecutionContext] =
     Resource(F.delay {
-      val executor = Executors.newSingleThreadExecutor()
+      val executor = Executors.newCachedThreadPool()
       val ec       = ExecutionContext.fromExecutor(executor)
       (ec, F.delay(executor.shutdown()))
     })

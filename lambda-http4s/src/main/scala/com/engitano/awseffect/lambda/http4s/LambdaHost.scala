@@ -49,6 +49,7 @@ class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: HttpRoutes[F]) e
         if (qs.isEmpty) "" else "?" + qs
       }
       .getOrElse("")
+    
     request.path + requestString
   }
 
