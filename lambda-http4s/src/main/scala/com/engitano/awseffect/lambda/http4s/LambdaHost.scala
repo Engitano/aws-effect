@@ -12,7 +12,6 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.engitano.awseffect.lambda.apigw.{ApiGatewayLambda, ProxyRequest, ProxyResponse}
 import fs2.Stream
 import org.http4s._
-import com.engitano.awseffect.lambda.http4s.LambdaHost.LambdaRoutes
 
 import scala.concurrent.ExecutionContext
 import cats.data.Kleisli
@@ -20,10 +19,6 @@ import cats.data.Kleisli
 final case class LambdaRequest[F[_]](req: Request[F], original: ProxyRequest, ctx: Context) {
   def mapK[G[_]](fk: F ~> G): LambdaRequest[G] =
     LambdaRequest(req.mapK(fk), original, ctx)
-}
-
-object LambdaHost {
-  type LambdaRoutes[F[_]] = Kleisli[OptionT[F, ?], LambdaRequest[F], Response[F]]
 }
 
 // Mad props to https://github.com/howardjohn/scala-server-lambda
