@@ -1,5 +1,8 @@
 package com.engitano.awseffect.lambda.http4s
 
+import cats.~>
+import cats.Functor
+import cats.data.OptionT
 import cats.effect.{ConcurrentEffect, ContextShift}
 import cats.syntax.apply._
 import cats.syntax.flatMap._
@@ -9,20 +12,34 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.engitano.awseffect.lambda.apigw.{ApiGatewayLambda, ProxyRequest, ProxyResponse}
 import fs2.Stream
 import org.http4s._
+import com.engitano.awseffect.lambda.http4s.LambdaHost.LambdaRoutes
 
 import scala.concurrent.ExecutionContext
+import cats.data.Kleisli
+
+final case class LambdaRequest[F[_]](req: Request[F], original: ProxyRequest, ctx: Context) {
+  def mapK[G[_]](fk: F ~> G): LambdaRequest[G] =
+    LambdaRequest(req.mapK(fk), original, ctx)
+}
+
+object LambdaHost {
+  type LambdaRoutes[F[_]] = Kleisli[OptionT[F, ?], LambdaRequest[F], Response[F]]
+}
 
 // Mad props to https://github.com/howardjohn/scala-server-lambda
-class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: HttpRoutes[F]) extends ApiGatewayLambda[F] {
+abstract class LambdaHost[F[_]: ConcurrentEffect: ContextShift] extends ApiGatewayLambda[F] {
 
   private val F = ConcurrentEffect[F]
 
-  override protected def handle(req: ProxyRequest, c: Context)(implicit ec: ExecutionContext): F[ProxyResponse] =
-    parseRequest(req).flatMap { req =>
-      service
-        .run(req)
-        .getOrElse(Response.notFound)
-        .flatMap(asProxyResponse)
+  protected def service: F[LambdaRoutes[F]]
+
+  override protected def handle(proxyReq: ProxyRequest, c: Context)(implicit ec: ExecutionContext): F[ProxyResponse] =
+    parseRequest(proxyReq).flatMap { req =>
+      service.flatMap {
+        _.run(LambdaRequest(req,proxyReq, c))
+          .getOrElse(Response.notFound)
+          .flatMap(asProxyResponse)
+      }
     }
 
   private def parseRequest(request: ProxyRequest): F[Request[F]] = F.fromEither {
@@ -49,7 +66,7 @@ class LambdaHost[F[_]: ConcurrentEffect: ContextShift](service: HttpRoutes[F]) e
         if (qs.isEmpty) "" else "?" + qs
       }
       .getOrElse("")
-    
+
     request.path + requestString
   }
 
