@@ -17,10 +17,4 @@ package object http4s {
       Kleisli(req => OptionT(F.suspend(pf.lift(req).sequence)))
   }
 
-  trait Lambda {
-    object λ {
-      def unapply[F[_]](ar: LambdaRequest[F]): Option[(Request[F], (ProxyRequest, Context))] =
-        Some(ar.req -> (ar.original -> ar.ctx))
-    }
-  }
 }
