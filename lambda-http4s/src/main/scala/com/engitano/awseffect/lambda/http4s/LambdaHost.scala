@@ -26,7 +26,7 @@ abstract class LambdaHost[F[_]: ConcurrentEffect: ContextShift] extends ApiGatew
 
   private val F = ConcurrentEffect[F]
 
-  protected def service: F[LambdaRoutes[F]]
+  protected def service(implicit ec: ExecutionContext): F[LambdaRoutes[F]]
 
   override protected def handle(proxyReq: ProxyRequest, c: Context)(implicit ec: ExecutionContext): F[ProxyResponse] =
     parseRequest(proxyReq).flatMap { req =>
