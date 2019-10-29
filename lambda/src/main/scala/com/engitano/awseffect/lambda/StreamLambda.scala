@@ -15,7 +15,8 @@ import scala.concurrent.ExecutionContext
 
 abstract class StreamLambda[F[_]] extends RequestStreamHandler {
 
-  implicit def contextShift(implicit ec: ExecutionContext): ContextShift[F]
+  protected val threadCount = 4
+  implicit def contextShift(ec: ExecutionContext): ContextShift[F]
   implicit val F: ConcurrentEffect[F]
 
   implicit def unsafeLogger = Slf4jLogger.getLogger[F]
@@ -36,10 +37,12 @@ abstract class StreamLambda[F[_]] extends RequestStreamHandler {
       context: Context
   ): F[Unit] =
     threadPool.use { implicit ec =>
+      implicit val cs = contextShift(ec)
+      val blocker = Blocker.liftExecutionContext(ec)
       _root_.fs2.io
-        .readInputStream(F.delay(input), input.available(), Blocker.liftExecutionContext(ec))
+        .readInputStream(F.delay(input), input.available(), blocker)
         .through(handle(context))
-        .through(_root_.fs2.io.writeOutputStream(F.delay(output), Blocker.liftExecutionContext(ec)))
+        .through(_root_.fs2.io.writeOutputStream(F.delay(output), blocker))
         .compile
         .drain
         .as(())
