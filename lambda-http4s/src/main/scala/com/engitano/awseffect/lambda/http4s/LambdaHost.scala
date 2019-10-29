@@ -24,8 +24,6 @@ final case class LambdaRequest[F[_]](req: Request[F], original: ProxyRequest, ct
 // Mad props to https://github.com/howardjohn/scala-server-lambda
 abstract class LambdaHost[F[_]: ConcurrentEffect: ContextShift] extends ApiGatewayLambda[F] {
 
-  private val F = ConcurrentEffect[F]
-
   protected def service(implicit ec: ExecutionContext): F[LambdaRoutes[F]]
 
   override protected def handle(proxyReq: ProxyRequest, c: Context)(implicit ec: ExecutionContext): F[ProxyResponse] =

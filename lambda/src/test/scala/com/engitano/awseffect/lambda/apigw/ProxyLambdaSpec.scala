@@ -13,17 +13,20 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.ExecutionContext
+import cats.effect.ContextShift
 
 class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
 
   implicit val ec = ExecutionContext.global
-  implicit val cs = IO.contextShift(ec)
 
   import ProxyMarshallers._
 
   "The ApiGatewayLambda" should {
     "return a valid JSON response" in {
       object sut extends ApiGatewayLambda[IO] with Dsl[IO] {
+
+        implicit def contextShift(implicit ec: ExecutionContext): ContextShift[IO] = IO.contextShift(ec)
+        val F = IO.ioConcurrentEffect
 
         override protected def handle(
             i: ProxyRequest,

@@ -13,12 +13,13 @@ import fs2.Pipe
 
 import scala.concurrent.ExecutionContext
 
-abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] extends RequestStreamHandler {
+abstract class StreamLambda[F[_]] extends RequestStreamHandler {
 
-  implicit def unsafeLogger[F[_]: Sync] = Slf4jLogger.getLogger[F]
-  protected val logger                  = Logger[F]
+  implicit def contextShift(implicit ec: ExecutionContext): ContextShift[F]
+  implicit val F: ConcurrentEffect[F]
 
-  private val F = ConcurrentEffect[F]
+  implicit def unsafeLogger = Slf4jLogger.getLogger[F]
+  protected def logger      = Logger[F]
 
   protected def threadPool: Resource[F, ExecutionContext] =
     Resource(F.delay {

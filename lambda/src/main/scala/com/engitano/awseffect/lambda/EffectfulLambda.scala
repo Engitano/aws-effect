@@ -10,7 +10,7 @@ import fs2._
 
 import scala.concurrent.ExecutionContext
 
-abstract class EffectfulLambda[F[_]: ConcurrentEffect: ContextShift, Req: Decoder, Res: Encoder]
+abstract class EffectfulLambda[F[_], Req: Decoder, Res: Encoder]
     extends StreamLambda[F] {
 
   protected def handle(i: Req, c: Context)(implicit ec: ExecutionContext): F[Res]
