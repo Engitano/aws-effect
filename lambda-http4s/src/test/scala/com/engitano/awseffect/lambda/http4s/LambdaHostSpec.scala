@@ -20,6 +20,7 @@ import scala.concurrent.ExecutionContext
 import com.engitano.awseffect.lambda.catsio.IOLambda
 import com.engitano.awseffect.lambda.apigw.ProxyResponse
 import cats.effect.Blocker
+import cats.effect.ContextShift
 
 class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
 
@@ -39,8 +40,7 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
         })
 
       val sut = new IOLambda  {
-        def handler(blocker: Blocker)(implicit ec: ExecutionContext) = {
-            implicit val cs = IO.contextShift(ec)
+        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) = {
             Http4sHandler[IO](blocker)(svc)
         }
       }

@@ -11,6 +11,7 @@ import com.amazonaws.services.lambda.runtime.Context
 import cats.effect.Blocker
 import com.engitano.awseffect.lambda.LambdaHandler
 import cats.effect.ConcurrentEffect
+import cats.effect.ContextShift
 
 trait IOLambda extends RequestStreamHandler {
 
@@ -28,10 +29,10 @@ trait IOLambda extends RequestStreamHandler {
     (Blocker[IO], threadPool).tupled
       .use { threading =>
         val blocker     = threading._1
-        handler(blocker)(threading._2)(input, output, context)
+        handler(blocker)(threading._2, IO.contextShift(threading._2))(input, output, context)
       }
       .unsafeRunSync()
   }
 
-  def handler(blocker: Blocker)(implicit ec: ExecutionContext): LambdaHandler[IO]
+  def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]): LambdaHandler[IO]
 }

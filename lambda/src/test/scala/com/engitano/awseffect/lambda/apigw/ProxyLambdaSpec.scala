@@ -17,6 +17,7 @@ import com.engitano.awseffect.lambda.catsio.IOLambda
 import cats.effect.Blocker
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import cats.effect.ContextShift
 
 class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
 
@@ -26,8 +27,7 @@ class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
     "return a valid JSON response" in {
 
       val sut = new IOLambda with Dsl[IO] {
-        def handler(blocker: Blocker)(implicit ec: ExecutionContext) =  {
-          implicit val cs = IO.contextShift(ec)
+        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) =  {
             ApiGatewayHandler[IO](blocker) { (p, _) => 
               p.as[Input].map { ip =>
                 ProxyResponse(
