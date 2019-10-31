@@ -16,6 +16,7 @@ import org.http4s._
 
 import scala.concurrent.ExecutionContext
 import cats.data.Kleisli
+import cats.effect.Blocker
 
 final case class LambdaRequest[F[_]](req: Request[F], original: ProxyRequest, ctx: Context) {
   def mapK[G[_]](fk: F ~> G): LambdaRequest[G] =
@@ -23,65 +24,66 @@ final case class LambdaRequest[F[_]](req: Request[F], original: ProxyRequest, ct
 }
 
 object Http4sHandler {
-  def apply[F[_]: ConcurrentEffect: ContextShift](service: F[LambdaRoutes[F]]): LambdaHandler[F] = ApiGatewayHandler { (p, c) =>
-    val F = ConcurrentEffect[F]
+  def apply[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker)(service: F[LambdaRoutes[F]]): LambdaHandler[F] =
+    ApiGatewayHandler(blocker) { (p, c) =>
+      val F = ConcurrentEffect[F]
 
-    def parseRequest(request: ProxyRequest): F[Request[F]] = F.fromEither {
-      for {
-        uri    <- Uri.fromString(reconstructPath(request))
-        method <- Method.fromString(request.httpMethod)
-      } yield
-        Request[F](
-          method,
-          uri,
-          headers = request.headers.map(toHeaders).getOrElse(Headers.empty),
-          body = request.body.map(encodeBody).getOrElse(EmptyBody)
-        )
-    }
-
-    def reconstructPath(request: ProxyRequest): String = {
-      val requestString = request.queryStringParameters
-        .map {
-          _.map {
-            case (k, v) => s"$k=$v"
-          }.mkString("&")
-        }
-        .map { qs =>
-          if (qs.isEmpty) "" else "?" + qs
-        }
-        .getOrElse("")
-
-      request.path + requestString
-    }
-
-    def asProxyResponse(resp: Response[F]): F[ProxyResponse] =
-      resp
-        .as[String]
-        .map { body =>
-          ProxyResponse(
-            resp.status.code,
-            body.some,
-            resp.headers.toList
-              .map(h => h.name.value -> h.value)
-              .toMap
+      def parseRequest(request: ProxyRequest): F[Request[F]] = F.fromEither {
+        for {
+          uri    <- Uri.fromString(reconstructPath(request))
+          method <- Method.fromString(request.httpMethod)
+        } yield
+          Request[F](
+            method,
+            uri,
+            headers = request.headers.map(toHeaders).getOrElse(Headers.empty),
+            body = request.body.map(encodeBody).getOrElse(EmptyBody)
           )
+      }
+
+      def reconstructPath(request: ProxyRequest): String = {
+        val requestString = request.queryStringParameters
+          .map {
+            _.map {
+              case (k, v) => s"$k=$v"
+            }.mkString("&")
+          }
+          .map { qs =>
+            if (qs.isEmpty) "" else "?" + qs
+          }
+          .getOrElse("")
+
+        request.path + requestString
+      }
+
+      def asProxyResponse(resp: Response[F]): F[ProxyResponse] =
+        resp
+          .as[String]
+          .map { body =>
+            ProxyResponse(
+              resp.status.code,
+              body.some,
+              resp.headers.toList
+                .map(h => h.name.value -> h.value)
+                .toMap
+            )
+          }
+
+      def toHeaders(headers: Map[String, String]): Headers =
+        Headers {
+          headers.map {
+            case (k, v) => Header(k, v)
+          }.toList
         }
 
-    def toHeaders(headers: Map[String, String]): Headers =
-      Headers {
-        headers.map {
-          case (k, v) => Header(k, v)
-        }.toList
-      }
+      def encodeBody(body: String) = Stream(body).through(fs2.text.utf8Encode)
 
-    def encodeBody(body: String) = Stream(body).through(fs2.text.utf8Encode)
-
-    parseRequest(p).flatMap { req =>
-      service.flatMap {
-        _.run(LambdaRequest(req, p, c))
-          .getOrElse(Response.notFound)
-          .flatMap(asProxyResponse)
+      parseRequest(p).flatMap { req =>
+        service.flatMap {
+          _.run(LambdaRequest(req, p, c))
+            .getOrElse(Response.notFound)
+            .flatMap(asProxyResponse)
+        }
       }
     }
-  }
 }

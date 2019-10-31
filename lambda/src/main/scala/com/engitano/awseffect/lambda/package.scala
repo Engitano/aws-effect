@@ -6,5 +6,5 @@ import java.io.InputStream
 
 package object lambda {
     import cats.effect.Blocker
-    type LambdaHandler[F[_]] = (InputStream, OutputStream, Context, Blocker) => F[Unit]
+    type LambdaHandler[F[_]] = (InputStream, OutputStream, Context) => F[Unit]
 }

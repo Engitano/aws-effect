@@ -14,19 +14,21 @@ import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.ExecutionContext
 import com.engitano.awseffect.lambda.catsio.IOLambda
+import cats.effect.Blocker
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
 
 
   import ProxyMarshallers._
-
   "The ApiGatewayLambda" should {
     "return a valid JSON response" in {
 
       val sut = new IOLambda with Dsl[IO] {
-        def handler(implicit ec: ExecutionContext) =  {
+        def handler(blocker: Blocker)(implicit ec: ExecutionContext) =  {
           implicit val cs = IO.contextShift(ec)
-            ApiGatewayHandler[IO] { (p, _) => 
+            ApiGatewayHandler[IO](blocker) { (p, _) => 
               p.as[Input].map { ip =>
                 ProxyResponse(
                   200,

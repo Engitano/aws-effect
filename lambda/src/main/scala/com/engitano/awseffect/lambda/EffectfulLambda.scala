@@ -12,13 +12,14 @@ import scala.concurrent.ExecutionContext
 import java.io.InputStream
 import java.io.OutputStream
 import cats.data.Kleisli
+import cats.effect.Blocker
 
 object EffectfulLambda {
 
   type EffectfulHandler[F[_], Req, Res] = (Req, Context) => F[Res]
 
-  def apply[F[_]: ConcurrentEffect: ContextShift, Req: Decoder, Res: Encoder](handler: EffectfulHandler[F, Req, Res]): LambdaHandler[F] =
-    StreamLambda[F] { c =>
+  def apply[F[_]: ConcurrentEffect: ContextShift, Req: Decoder, Res: Encoder](blocker: Blocker)(handler: EffectfulHandler[F, Req, Res]): LambdaHandler[F] =
+    StreamLambda[F](blocker) { c =>
       _.through(byteArrayParser)
         .through(decoder[F, Req])
         .mapAsync(1)(i => handler(i, c))

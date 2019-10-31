@@ -19,6 +19,7 @@ import org.http4s.circe.CirceEntityEncoder._
 import scala.concurrent.ExecutionContext
 import com.engitano.awseffect.lambda.catsio.IOLambda
 import com.engitano.awseffect.lambda.apigw.ProxyResponse
+import cats.effect.Blocker
 
 class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
 
@@ -38,9 +39,9 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
         })
 
       val sut = new IOLambda  {
-        def handler(implicit ec: ExecutionContext) = {
+        def handler(blocker: Blocker)(implicit ec: ExecutionContext) = {
             implicit val cs = IO.contextShift(ec)
-            Http4sHandler[IO](svc)
+            Http4sHandler[IO](blocker)(svc)
         }
       }
 

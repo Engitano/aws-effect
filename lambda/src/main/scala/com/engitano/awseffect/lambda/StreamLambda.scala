@@ -18,12 +18,11 @@ object StreamLambda {
 
   type StreamHandler[F[_]] = Context => Pipe[F, Byte, Byte]
 
-  def apply[F[_]: ConcurrentEffect: ContextShift](handler: StreamHandler[F]): LambdaHandler[F] =
+  def apply[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker)(handler: StreamHandler[F]): LambdaHandler[F] =
     (
         input: InputStream,
         output: OutputStream,
-        context: Context,
-        blocker: Blocker
+        context: Context
     ) =>
       _root_.fs2.io
         .readInputStream(Sync[F].delay(input), input.available(), blocker)

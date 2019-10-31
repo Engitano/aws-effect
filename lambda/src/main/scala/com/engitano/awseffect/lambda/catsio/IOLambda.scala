@@ -28,10 +28,10 @@ trait IOLambda extends RequestStreamHandler {
     (Blocker[IO], threadPool).tupled
       .use { threading =>
         val blocker     = threading._1
-        handler(threading._2)(input, output, context, blocker)
+        handler(blocker)(threading._2)(input, output, context)
       }
       .unsafeRunSync()
   }
 
-  def handler(implicit ec: ExecutionContext): LambdaHandler[IO]
+  def handler(blocker: Blocker)(implicit ec: ExecutionContext): LambdaHandler[IO]
 }
