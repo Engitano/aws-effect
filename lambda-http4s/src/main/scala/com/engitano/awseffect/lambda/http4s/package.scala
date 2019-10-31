@@ -16,5 +16,4 @@ package object http4s {
     def of[F[_]](pf: PartialFunction[LambdaRequest[F], F[Response[F]]])(implicit F: Sync[F]): LambdaRoutes[F] =
       Kleisli(req => OptionT(F.suspend(pf.lift(req).sequence)))
   }
-
 }

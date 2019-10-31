@@ -94,7 +94,13 @@ lazy val `aws-effect-lambda-http4s` = (project in file("lambda-http4s"))
   .settings(
     version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
     libraryDependencies ++= Seq(
-      Dependencies.http4sCore
+      Dependencies.http4sCore,
+      Dependencies.circe       % Test,
+      Dependencies.circeAuto   % Test,
+      Dependencies.http4sDsl   % Test,
+      Dependencies.http4sCirce % Test,
+      Dependencies.scalatest   % Test,
+      Dependencies.scalamock   % Test
     )
   )
   .settings(addCompilerPlugin(kindProjector))

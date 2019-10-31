@@ -9,18 +9,20 @@ import com.amazonaws.services.lambda.runtime.Context
 import fs2._
 
 import scala.concurrent.ExecutionContext
+import java.io.InputStream
+import java.io.OutputStream
+import cats.data.Kleisli
 
-abstract class EffectfulLambda[F[_]: ConcurrentEffect: ContextShift, Req: Decoder, Res: Encoder]
-    extends StreamLambda[F] {
+object EffectfulLambda {
 
-  protected def handle(i: Req, c: Context)(implicit ec: ExecutionContext): F[Res]
+  type EffectfulHandler[F[_], Req, Res] = (Req, Context) => F[Res]
 
-  override protected def handle(c: Context)(implicit ec: ExecutionContext): Pipe[F, Byte, Byte] =
-    _.through(byteArrayParser)
-      .through(decoder[F, Req])
-      .evalTap(r => logger.info("Request Deserialized"))
-      .mapAsync(1)(i => logger.info("Running effectful handler") *> handle(i, c) <* logger.info("Effectful handler complete"))
-      .map(_.asJson.toString)
-      .evalTap(j => logger.info(s"Returning json ${j}"))
-      .flatMap(j => Stream(j.getBytes.toSeq: _*))
+  def apply[F[_]: ConcurrentEffect: ContextShift, Req: Decoder, Res: Encoder](handler: EffectfulHandler[F, Req, Res]): LambdaHandler[F] =
+    StreamLambda[F] { c =>
+      _.through(byteArrayParser)
+        .through(decoder[F, Req])
+        .mapAsync(1)(i => handler(i, c))
+        .map(_.asJson.toString)
+        .flatMap(j => Stream(j.getBytes.toSeq: _*))
+    } _
 }

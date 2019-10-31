@@ -1,40 +1,47 @@
-package com.engitano.awseffect.lambda.apigw
+package com.engitano.awseffect.lambda.http4s
+
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import cats.effect.IO
 import cats.syntax.option._
 import com.amazonaws.services.lambda.runtime.Context
-import com.engitano.awseffect.lambda.apigw.Messages.{Input, Output}
+import com.engitano.awseffect.lambda.http4s.Messages.{Input, Output}
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, WordSpec}
+import io.circe.generic.auto._
+import org.http4s.circe.CirceEntityDecoder._
+import org.http4s.circe.CirceEntityEncoder._
 
 import scala.concurrent.ExecutionContext
 import com.engitano.awseffect.lambda.catsio.IOLambda
+import com.engitano.awseffect.lambda.apigw.ProxyResponse
 
-class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
+class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
 
 
-  import ProxyMarshallers._
+  import com.engitano.awseffect.lambda.apigw.ProxyMarshallers._
 
-  "The ApiGatewayLambda" should {
+  "The Http4sHandler" should {
     "return a valid JSON response" in {
+        import Dsl._
+        import org.http4s.dsl.io._
 
-      val sut = new IOLambda with Dsl[IO] {
-        def handler(implicit ec: ExecutionContext) =  {
-          implicit val cs = IO.contextShift(ec)
-            ApiGatewayHandler[IO] { (p, _) => 
-              p.as[Input].map { ip =>
-                ProxyResponse(
-                  200,
-                  Output(ip.name + "!").asJson.toString().some
-                )
-            }
-          }
-      }
+        val svc = IO.pure(LambdaRoutes.of[IO] {
+            case req @ PUT -> Root / "test" / "hello" λ _ => 
+                req.req.as[Input].flatMap { i =>
+                    Ok(Output(i.name + "!"))
+                }
+        })
+
+      val sut = new IOLambda  {
+        def handler(implicit ec: ExecutionContext) = {
+            implicit val cs = IO.contextShift(ec)
+            Http4sHandler[IO](svc)
+        }
       }
 
       val inputStream =

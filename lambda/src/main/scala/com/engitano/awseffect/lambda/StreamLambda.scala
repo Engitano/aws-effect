@@ -12,50 +12,24 @@ import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import fs2.Pipe
 
 import scala.concurrent.ExecutionContext
+import cats.effect.IO
 
-abstract class StreamLambda[F[_]: ConcurrentEffect: ContextShift] extends RequestStreamHandler {
+object StreamLambda {
 
-  implicit def unsafeLogger[F[_]: Sync] = Slf4jLogger.getLogger[F]
-  protected val logger                  = Logger[F]
+  type StreamHandler[F[_]] = Context => Pipe[F, Byte, Byte]
 
-  private val F = ConcurrentEffect[F]
-
-  protected def threadPool: Resource[F, ExecutionContext] =
-    Resource(F.delay {
-      val executor = Executors.newCachedThreadPool()
-      val ec       = ExecutionContext.fromExecutor(executor)
-      (ec, F.delay(executor.shutdown()))
-    })
-
-  protected def handle(c: Context)(implicit ec: ExecutionContext): Pipe[F, Byte, Byte]
-
-  private def handleCore(
-      input: InputStream,
-      output: OutputStream,
-      context: Context
-  ): F[Unit] =
-    threadPool.use { implicit ec =>
+  def apply[F[_]: ConcurrentEffect: ContextShift](handler: StreamHandler[F]): LambdaHandler[F] =
+    (
+        input: InputStream,
+        output: OutputStream,
+        context: Context,
+        blocker: Blocker
+    ) =>
       _root_.fs2.io
-        .readInputStream(F.delay(input), input.available(), Blocker.liftExecutionContext(ec))
-        .through(handle(context))
-        .through(_root_.fs2.io.writeOutputStream(F.delay(output), Blocker.liftExecutionContext(ec)))
+        .readInputStream(Sync[F].delay(input), input.available(), blocker)
+        .through(handler(context))
+        .through(_root_.fs2.io.writeOutputStream(Sync[F].delay(output), blocker))
         .compile
         .drain
         .as(())
-    }
-
-  override def handleRequest(
-      input: InputStream,
-      output: OutputStream,
-      context: Context
-  ): Unit =
-    (logger.info("Beginning handler fn") *>
-      handleCore(input, output, context)
-        .handleErrorWith { t =>
-          logger.error(t)(
-            s"Error while executing lambda: ${t.getMessage}"
-          ) *>
-            F.raiseError(t)
-        } <* logger.info("Function complete")).toIO
-      .unsafeRunSync()
 }
