@@ -1,6 +1,5 @@
 package com.engitano.awseffect.lambda.http4s
 
-
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 
 import cats.effect.IO
@@ -25,28 +24,28 @@ import cats.effect.concurrent.Ref
 
 class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
 
-
   import com.engitano.awseffect.lambda.apigw.ProxyMarshallers._
 
   "The Http4sHandler" should {
     "return a valid JSON response" in {
-        import Dsl._
-        import org.http4s.dsl.io._
+      import Dsl._
+      import org.http4s.dsl.io._
 
-        val svc = LambdaRoutes.of[IO] {
-            case req @ PUT -> Root / "test" / "hello" λ _ => 
-                req.req.as[Input].flatMap { i =>
-                    Ok(Output(i.name + "!"))
-                }
-        }
+      val svc = LambdaRoutes.of[IO] {
+        case req @ PUT -> Root / "test" / "hello" λ _ =>
+          req.req.as[Input].flatMap { i =>
+            Ok(Output(i.name + "!"))
+          }
+      }
 
       val check = Ref[IO].of(0).unsafeRunSync
-      val sut = new IOLambda  {
-        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) = for {
+      val sut = new IOLambda {
+        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) =
+          for {
             v <- check.get
             _ <- check.set(v + 1)
-            h = Http4sHandler[IO](blocker)(svc)
-        } yield h
+            h = Http4sHandler[IO](blocker)(svc.orNotFound)
+          } yield h
       }
 
       val inputStream =
@@ -62,10 +61,10 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
       respBody.right.get.greeting shouldEqual "Hello Functional World!"
 
       val inputStream2 =
-      new ByteArrayInputStream(Messages.requestWithInputName.getBytes)
-    val output2 = new ByteArrayOutputStream()
-    sut.handleRequest(inputStream2, output2, mock[Context])
-    check.get.unsafeRunSync() shouldBe 1
+        new ByteArrayInputStream(Messages.requestWithInputName.getBytes)
+      val output2 = new ByteArrayOutputStream()
+      sut.handleRequest(inputStream2, output2, mock[Context])
+      check.get.unsafeRunSync() shouldBe 1
 
     }
   }
