@@ -22,7 +22,7 @@ trait IOLambda extends RequestStreamHandler {
   implicit val cs = IO.contextShift(ec)
   val blocker     = Blocker.liftExecutionContext(ExecutionContext.fromExecutor(Executors.newCachedThreadPool()))
 
-  private val _handler: IO[MVar[IO, LambdaHandler[IO]]] = MVar.empty[IO, LambdaHandler[IO]]
+  private val _handler: MVar[IO, LambdaHandler[IO]] = MVar.empty[IO, LambdaHandler[IO]].unsafeRunSync()
 
   override def handleRequest(
       input: InputStream,
@@ -30,10 +30,9 @@ trait IOLambda extends RequestStreamHandler {
       context: Context
   ): Unit =
     (for {
-      mv <- _handler
-      fh <- mv.tryTake
+      fh <- _handler.tryTake
       h  <- fh.map { IO(_) }.getOrElse(handler(blocker)(ec, cs))
-      _  <- mv.tryPut(h)
+      _  <- _handler.tryPut(h)
       r  <- h(input, output, context)
     } yield r).unsafeRunSync()
 

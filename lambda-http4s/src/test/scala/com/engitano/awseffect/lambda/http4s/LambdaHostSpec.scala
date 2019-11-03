@@ -21,6 +21,7 @@ import com.engitano.awseffect.lambda.catsio.IOLambda
 import com.engitano.awseffect.lambda.apigw.ProxyResponse
 import cats.effect.Blocker
 import cats.effect.ContextShift
+import cats.effect.concurrent.Ref
 
 class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
 
@@ -32,17 +33,20 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
         import Dsl._
         import org.http4s.dsl.io._
 
-        val svc = IO.pure(LambdaRoutes.of[IO] {
+        val svc = LambdaRoutes.of[IO] {
             case req @ PUT -> Root / "test" / "hello" λ _ => 
                 req.req.as[Input].flatMap { i =>
                     Ok(Output(i.name + "!"))
                 }
-        })
-
-      val sut = new IOLambda  {
-        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) = {
-            IO.pure(Http4sHandler[IO](blocker)(svc))
         }
+
+      val check = Ref[IO].of(0).unsafeRunSync
+      val sut = new IOLambda  {
+        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) = for {
+            v <- check.get
+            _ <- check.set(v + 1)
+            h = Http4sHandler[IO](blocker)(svc)
+        } yield h
       }
 
       val inputStream =
@@ -56,6 +60,12 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
       }
       val respBody = decode[Output](response.right.get.body.getOrElse(""))
       respBody.right.get.greeting shouldEqual "Hello Functional World!"
+
+      val inputStream2 =
+      new ByteArrayInputStream(Messages.requestWithInputName.getBytes)
+    val output2 = new ByteArrayOutputStream()
+    sut.handleRequest(inputStream2, output2, mock[Context])
+    check.get.unsafeRunSync() shouldBe 1
 
     }
   }

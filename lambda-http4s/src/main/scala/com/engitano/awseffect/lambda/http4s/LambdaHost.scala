@@ -24,7 +24,7 @@ final case class LambdaRequest[F[_]](req: Request[F], original: ProxyRequest, ct
 }
 
 object Http4sHandler {
-  def apply[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker)(service: F[LambdaRoutes[F]]): LambdaHandler[F] =
+  def apply[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker)(service: LambdaRoutes[F]): LambdaHandler[F] =
     ApiGatewayHandler(blocker) { (p, c) =>
       val F = ConcurrentEffect[F]
 
@@ -79,11 +79,10 @@ object Http4sHandler {
       def encodeBody(body: String) = Stream(body).through(fs2.text.utf8Encode)
 
       parseRequest(p).flatMap { req =>
-        service.flatMap {
-          _.run(LambdaRequest(req, p, c))
-            .getOrElse(Response.notFound)
-            .flatMap(asProxyResponse)
-        }
+        service
+          .run(LambdaRequest(req, p, c))
+          .getOrElse(Response.notFound)
+          .flatMap(asProxyResponse)
       }
     }
 }
