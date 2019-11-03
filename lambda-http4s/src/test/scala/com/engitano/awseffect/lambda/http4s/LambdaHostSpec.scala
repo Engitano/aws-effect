@@ -41,7 +41,7 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
 
       val sut = new IOLambda  {
         def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) = {
-            Http4sHandler[IO](blocker)(svc)
+            IO.pure(Http4sHandler[IO](blocker)(svc))
         }
       }
 

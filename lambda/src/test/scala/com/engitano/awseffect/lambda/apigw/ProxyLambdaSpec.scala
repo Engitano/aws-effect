@@ -21,22 +21,21 @@ import cats.effect.ContextShift
 
 class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
 
-
   import ProxyMarshallers._
   "The ApiGatewayLambda" should {
     "return a valid JSON response" in {
 
       val sut = new IOLambda with Dsl[IO] {
-        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) =  {
-            ApiGatewayHandler[IO](blocker) { (p, _) => 
-              p.as[Input].map { ip =>
-                ProxyResponse(
-                  200,
-                  Output(ip.name + "!").asJson.toString().some
-                )
+        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) = {
+          IO(ApiGatewayHandler[IO](blocker) { (p, _) =>
+            p.as[Input].map { ip =>
+              ProxyResponse(
+                200,
+                Output(ip.name + "!").asJson.toString().some
+              )
             }
-          }
-      }
+          })
+        }
       }
 
       val inputStream =

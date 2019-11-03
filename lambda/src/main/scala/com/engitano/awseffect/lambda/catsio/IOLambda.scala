@@ -12,27 +12,30 @@ import cats.effect.Blocker
 import com.engitano.awseffect.lambda.LambdaHandler
 import cats.effect.ConcurrentEffect
 import cats.effect.ContextShift
+import java.util.concurrent.Executors
+import java.util.logging.Handler
+import cats.effect.concurrent.MVar
 
 trait IOLambda extends RequestStreamHandler {
 
-  private def threadPool: Resource[IO, ExecutionContext] =
-    Resource(IO.delay {
-      val ec       = com.engitano.awseffect.lambda.internal.PoolUtils.ioLambdaGlobal
-      (ec._1, IO.delay(ec._2.shutdown()))
-    })
+  implicit val ec = com.engitano.awseffect.lambda.internal.PoolUtils.ioLambdaGlobal
+  implicit val cs = IO.contextShift(ec)
+  val blocker     = Blocker.liftExecutionContext(ExecutionContext.fromExecutor(Executors.newCachedThreadPool()))
+
+  private val _handler: IO[MVar[IO, LambdaHandler[IO]]] = MVar.empty[IO, LambdaHandler[IO]]
 
   override def handleRequest(
       input: InputStream,
       output: OutputStream,
       context: Context
-  ): Unit = {
-    (Blocker[IO], threadPool).tupled
-      .use { threading =>
-        val blocker     = threading._1
-        handler(blocker)(threading._2, IO.contextShift(threading._2))(input, output, context)
-      }
-      .unsafeRunSync()
-  }
+  ): Unit =
+    (for {
+      mv <- _handler
+      fh <- mv.tryTake
+      h  <- fh.map { IO(_) }.getOrElse(handler(blocker)(ec, cs))
+      _  <- mv.tryPut(h)
+      r  <- h(input, output, context)
+    } yield r).unsafeRunSync()
 
-  def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]): LambdaHandler[IO]
+  def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]): IO[LambdaHandler[IO]]
 }

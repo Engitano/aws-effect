@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService
 object PoolUtils {
 
   // we can initialize this eagerly because the enclosing object is lazy
-  val ioLambdaGlobal: (ExecutionContext, ExecutorService) = {
+  val ioLambdaGlobal: ExecutionContext = {
     // lower-bound of 2 to prevent pathological deadlocks on virtual machines
     val bound = math.max(2, Runtime.getRuntime().availableProcessors())
 
@@ -46,7 +46,7 @@ object PoolUtils {
       }
     )
 
-    (exitOnFatal(ExecutionContext.fromExecutor(executor)), executor)
+    exitOnFatal(ExecutionContext.fromExecutor(executor))
   }
 
   def exitOnFatal(ec: ExecutionContext): ExecutionContext = new ExecutionContext {
