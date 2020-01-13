@@ -17,7 +17,7 @@ writeVersion := {
 test in publish := {}
 
 lazy val root = (project in file("."))
-  .aggregate(`aws-effect-common`, `aws-effect-sqs`, `aws-effect-sns`, `aws-effect-lambda`, `aws-effect-lambda-http4s`)
+  .aggregate(`aws-effect-common`, `aws-effect-sqs`, `aws-effect-sns`, `aws-effect-ses`, `aws-effect-lambda`, `aws-effect-lambda-http4s`)
   .settings(Common())
   .settings(
     version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
@@ -62,6 +62,20 @@ lazy val `aws-effect-sns` = (project in file("sns"))
       Dependencies.catsEffect,
       Dependencies.fs2,
       Dependencies.sns
+    )
+  )
+  .settings(addCompilerPlugin(kindProjector))
+  .dependsOn(`aws-effect-common`)
+
+lazy val `aws-effect-ses` = (project in file("ses"))
+  .settings(Common())
+  .settings(bintrayPackageLabels ++= Seq("aws", "ses"))
+  .settings(
+    version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
+    libraryDependencies ++= Seq(
+      Dependencies.catsEffect,
+      Dependencies.ses,
+      Dependencies.scalatest % Test
     )
   )
   .settings(addCompilerPlugin(kindProjector))

@@ -27,6 +27,7 @@ object Dependencies {
   val slf4j      = "org.slf4j"              % "slf4j-api"            % slf4jV
   val sqs        = "software.amazon.awssdk" % "sqs"                  % awsV
   val sns        = "software.amazon.awssdk" % "sns"                  % awsV
+  val ses        = "software.amazon.awssdk" % "ses"                  % awsV
   val log4cats   = "io.chrisdavenport"      %% "log4cats-slf4j"      % log4catsV
 
   val http4sCore  = "org.http4s" %% "http4s-core"  % http4sV
