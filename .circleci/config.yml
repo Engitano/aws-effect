@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: hseeberger/scala-sbt:8u222_1.3.2_2.13.1
+      - image: mtranter/sbt-protoc:1.2.8_2.12
     working_directory: ~/aws-effect
     steps:
       - checkout
