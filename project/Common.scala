@@ -5,7 +5,7 @@ import sbt.Keys.{licenses, _}
 object Common {
 
   val scala213               = "2.13.1"
-  val scala212               = "2.12.8"
+  val scala212               = "2.12.10"
   val supportedScalaVersions = List(scala213, scala212)
 
   def apply() = Seq(
