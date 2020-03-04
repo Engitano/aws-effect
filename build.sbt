@@ -1,5 +1,5 @@
 resolvers += Resolver.sonatypeRepo("releases")
-val kindProjector = "org.typelevel" % "kind-projector" % "0.10.3" cross CrossVersion.binary
+val kindProjector = "org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full
 
 val majorVersion = SettingKey[String]("major version")
 val minorVersion = SettingKey[String]("minor version")

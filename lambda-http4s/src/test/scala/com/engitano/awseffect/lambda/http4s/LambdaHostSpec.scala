@@ -40,7 +40,7 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
 
       val check = Ref[IO].of(0).unsafeRunSync
       val sut = new IOLambda {
-        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) =
+        def handler(blocker: Blocker) =
           for {
             v <- check.get
             _ <- check.set(v + 1)

@@ -26,7 +26,7 @@ class ProxyLambdaSpec extends WordSpec with Matchers with MockFactory {
     "return a valid JSON response" in {
 
       val sut = new IOLambda with Dsl[IO] {
-        def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]) = {
+        def handler(blocker: Blocker) = {
           IO(ApiGatewayHandler[IO](blocker) { (p, _) =>
             p.as[Input].map { ip =>
               ProxyResponse(

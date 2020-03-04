@@ -31,10 +31,10 @@ trait IOLambda extends RequestStreamHandler {
   ): Unit =
     (for {
       fh <- _handler.tryTake
-      h  <- fh.map { IO(_) }.getOrElse(handler(blocker)(ec, cs))
+      h  <- fh.map { IO(_) }.getOrElse(handler(blocker))
       _  <- _handler.tryPut(h)
       r  <- h(input, output, context)
     } yield r).unsafeRunSync()
 
-  def handler(blocker: Blocker)(implicit ec: ExecutionContext, cs: ContextShift[IO]): IO[LambdaHandler[IO]]
+  def handler(blocker: Blocker): IO[LambdaHandler[IO]]
 }
