@@ -34,6 +34,7 @@ lazy val `aws-effect-common` = (project in file("common"))
       Dependencies.circe,
       Dependencies.circeAuto,
       Dependencies.catsTestkit         % Test,
+      Dependencies.discipline          % Test,
       Dependencies.scalacheckShapeless % Test
     )
   )
@@ -75,7 +76,8 @@ lazy val `aws-effect-ses` = (project in file("ses"))
     libraryDependencies ++= Seq(
       Dependencies.catsEffect,
       Dependencies.ses,
-      Dependencies.scalatest % Test
+      Dependencies.discipline % Test,
+      Dependencies.scalatest  % Test
     )
   )
   .settings(addCompilerPlugin(kindProjector))
@@ -95,8 +97,9 @@ lazy val `aws-effect-lambda` = (project in file("lambda"))
       Dependencies.lambda,
       Dependencies.log4cats,
       Dependencies.slf4j,
-      Dependencies.scalatest % Test,
-      Dependencies.scalamock % Test
+      Dependencies.discipline % Test,
+      Dependencies.scalatest  % Test,
+      Dependencies.scalamock  % Test
     )
   )
   .settings(addCompilerPlugin(kindProjector))
@@ -109,6 +112,7 @@ lazy val `aws-effect-lambda-http4s` = (project in file("lambda-http4s"))
     version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
     libraryDependencies ++= Seq(
       Dependencies.http4sCore,
+      Dependencies.discipline  % Test,
       Dependencies.circe       % Test,
       Dependencies.circeAuto   % Test,
       Dependencies.http4sDsl   % Test,

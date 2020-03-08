@@ -1,26 +1,30 @@
 package com.engitano.awseffect.marshalling
 
 import cats.{ApplicativeError, Eq}
+import cats.instances.either._
+import cats.instances.string._
+import cats.instances.int._
+import cats.instances.tuple._
 import cats.laws.discipline._
 import cats.laws.discipline.eq._
 import cats.laws.discipline.arbitrary._
-import cats.instances.either._
-import cats.syntax.either._
 import org.scalacheck.{Arbitrary, Cogen, Gen}
-import cats.tests.CatsSuite
 import org.scalacheck.ScalacheckShapeless._
+import org.scalatest.funspec.AnyFunSpec
+import org.typelevel.discipline.scalatest.FunSpecDiscipline
+import org.scalatest.prop.Configuration
 
-class MarshallerLawSpec extends CatsSuite {
+class MarshallerLawSpec extends AnyFunSpec with FunSpecDiscipline with Configuration {
 
   type OrError[A] = Either[Throwable, A]
 
   import com.engitano.awseffect.instances.marshalling._
 
-  implicit def ec = ExhaustiveCheck.instance(Stream((1 to 50).toList :_*))
+  implicit def ec = ExhaustiveCheck.instance((1 to 50).toList)
 
   implicit def et: Eq[Throwable] = Eq.fromUniversalEquals
 
-  implicit def ecs = ExhaustiveCheck.instance(Stream((1 to 50).map(_.toString).toList :_*))
+  implicit def ecs = ExhaustiveCheck.instance((1 to 50).toList.map(_.toString))
 
   implicit def eqMarshallerE[A, B](implicit ev: Eq[A => OrError[B]]): cats.kernel.Eq[Marshaller[OrError, A, B]] =
     Eq.by[Marshaller[OrError, A, B], A => OrError[B]](_.marshall)

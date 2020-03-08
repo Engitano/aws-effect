@@ -4,16 +4,16 @@ import Keys._
 object Dependencies {
 
   object Versions {
-    val catsV      = "2.0.0-M4"
-    val circeV     = "0.12.0-M3"
-    val circeFs2V  = "0.12.0-M1"
+    val catsV      = "2.1.1"
+    val circeV     = "0.13.0"
+    val circeFs2V  = "0.13.0"
     val lambdaV    = "1.2.0"
-    val fs2V       = "1.1.0-M1"
+    val fs2V       = "2.2.2"
     val slf4jV     = "1.7.25"
     val scalatestV = "3.0.8"
     val awsV       = "2.7.0"
-    val http4sV    = "0.21.0-M2"
-    val log4catsV  = "1.0.0-RC3"
+    val http4sV    = "0.21.1"
+    val log4catsV  = "1.0.1"
   }
 
   import Versions._
@@ -36,6 +36,7 @@ object Dependencies {
 
   val scalatest           = "org.scalatest"              %% "scalatest"                 % scalatestV
   val scalamock           = "org.scalamock"              %% "scalamock"                 % "4.3.0"
-  val catsTestkit         = "org.typelevel"              %% "cats-testkit"              % catsV
+  val discipline          = "org.typelevel"              %% "discipline-scalatest"      % "1.0.1"
+  val catsTestkit         = "org.typelevel"              %% "cats-laws"                 % catsV
   val scalacheckShapeless = "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.3"
 }
