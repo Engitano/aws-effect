@@ -13,7 +13,7 @@ case class ObjectBis(
     key: String,
     size: Double,
     eTag: String,
-    versionId: String
+    versionId: Option[String]
 )
 case class Metadata(
     s3SchemaVersion: String,
