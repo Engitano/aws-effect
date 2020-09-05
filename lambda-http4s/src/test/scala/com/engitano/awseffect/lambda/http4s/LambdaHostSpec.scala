@@ -14,13 +14,15 @@ import org.scalatest.{Matchers, WordSpec}
 import io.circe.generic.auto._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe.CirceEntityEncoder._
-
+import org.http4s.implicits._
 import scala.concurrent.ExecutionContext
 import com.engitano.awseffect.lambda.catsio.IOLambda
 import com.engitano.awseffect.lambda.apigw.ProxyResponse
 import cats.effect.Blocker
 import cats.effect.ContextShift
 import cats.effect.concurrent.Ref
+import org.http4s.HttpRoutes
+import io.chrisdavenport.vault.Key
 
 class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
 
@@ -31,12 +33,13 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
       import Dsl._
       import org.http4s.dsl.io._
 
-      val svc = LambdaRoutes.of[IO] {
-        case req @ PUT -> Root / "test" / "hello" λ _ =>
-          req.req.as[Input].flatMap { i =>
+      val svc = HttpRoutes.of[IO] {
+        case req @ PUT -> Root / "test" / "hello" =>
+          req.as[Input].flatMap { i =>
             Ok(Output(i.name + "!"))
           }
       }
+
 
       val check = Ref[IO].of(0).unsafeRunSync
       val sut = new IOLambda {
@@ -44,7 +47,8 @@ class Http4sHandlerSpec extends WordSpec with Matchers with MockFactory {
           for {
             v <- check.get
             _ <- check.set(v + 1)
-            h = Http4sHandler[IO](blocker)(svc.orNotFound)
+            key <- Key.newKey[IO, LambdaRequestParams]
+            h = Http4sHandler[IO](blocker)(svc.orNotFound, key)
           } yield h
       }
 

@@ -17,14 +17,18 @@ import org.http4s._
 import scala.concurrent.ExecutionContext
 import cats.data.Kleisli
 import cats.effect.Blocker
+import io.chrisdavenport.vault.Key
 
-final case class LambdaRequest[F[_]](req: Request[F], original: ProxyRequest, ctx: Context) {
+final case class LambdaRequest[F[_]](req: Request[F], originalParams: Option[LambdaRequestParams]) {
   def mapK[G[_]](fk: F ~> G): LambdaRequest[G] =
-    LambdaRequest(req.mapK(fk), original, ctx)
+    LambdaRequest(req.mapK(fk), originalParams)
 }
 
+case class LambdaRequestParams(proxyRequest: ProxyRequest, context: Context)
+
 object Http4sHandler {
-  def apply[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker)(service: LambdaApp[F]): LambdaHandler[F] =
+
+  def apply[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker)(service: HttpApp[F], vaultKey: Key[LambdaRequestParams]): LambdaHandler[F] =
     ApiGatewayHandler(blocker) { (p, c) =>
       val F = ConcurrentEffect[F]
 
@@ -78,9 +82,10 @@ object Http4sHandler {
 
       def encodeBody(body: String) = Stream(body).through(fs2.text.utf8Encode)
 
-      parseRequest(p).flatMap { req =>
+      parseRequest(p).flatMap { req => 
+        val reqWithLambda = req.withAttribute(vaultKey, LambdaRequestParams(p, c))
         service
-          .run(LambdaRequest(req, p, c))
+          .run(reqWithLambda)
           .flatMap(asProxyResponse)
       }
     }

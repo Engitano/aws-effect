@@ -6,7 +6,7 @@ val minorVersion = SettingKey[String]("minor version")
 val patchVersion = SettingKey[Option[String]]("patch version")
 
 Global / majorVersion := "0"
-Global / minorVersion := "1"
+Global / minorVersion := "2"
 Global / patchVersion := Some("0")
 
 val writeVersion = taskKey[Unit]("Writes the version to version.txt")
@@ -112,10 +112,10 @@ lazy val `aws-effect-lambda-http4s` = (project in file("lambda-http4s"))
     version := s"${majorVersion.value}.${minorVersion.value}${patchVersion.value.fold("")(p => s".$p")}",
     libraryDependencies ++= Seq(
       Dependencies.http4sCore,
+      Dependencies.http4sDsl,
       Dependencies.discipline  % Test,
       Dependencies.circe       % Test,
       Dependencies.circeAuto   % Test,
-      Dependencies.http4sDsl   % Test,
       Dependencies.http4sCirce % Test,
       Dependencies.scalatest   % Test,
       Dependencies.scalamock   % Test
