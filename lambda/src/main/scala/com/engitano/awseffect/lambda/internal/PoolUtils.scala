@@ -24,7 +24,7 @@ import java.util.concurrent.{Executors, ThreadFactory}
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.ExecutorService
 
-// Stolen from Cats Effect
+// Taken from Cats Effect
 // https://github.com/typelevel/cats-effect/blob/master/core/jvm/src/main/scala/cats/effect/internals/PoolUtils.scala
 object PoolUtils {
 

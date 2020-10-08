@@ -1,6 +1,6 @@
 package com.engitano.awseffect.sqs
 
-import cats.effect.{Concurrent, Timer}
+import cats.effect.{Async, Timer}
 import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -49,7 +49,7 @@ object SqsClient {
   import com.engitano.awseffect.syntax.builder._
   import conversions._
 
-  def apply[F[_]: Concurrent](wrapped: SqsAsyncClient): SqsClient[F] = new SqsClient[F] {
+  def apply[F[_]: Async](wrapped: SqsAsyncClient): SqsClient[F] = new SqsClient[F] {
     override def poll[A](
         queueUrl: String,
         timeoutSeconds: Option[Int] = None,
