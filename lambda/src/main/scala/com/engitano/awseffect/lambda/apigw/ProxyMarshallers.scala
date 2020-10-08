@@ -14,8 +14,6 @@ trait ProxyMarshallers {
         case None => MarshallingException("Empty request body").raiseError[F, I]
       }
     }
-
-
 }
 
 object ProxyMarshallers extends ProxyMarshallers

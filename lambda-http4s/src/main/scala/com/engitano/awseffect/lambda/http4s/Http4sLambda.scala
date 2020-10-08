@@ -1,16 +1,32 @@
 package com.engitano.awseffect.lambda.http4s
 
+import cats.syntax.flatMap._
+import cats.syntax.functor._
+import org.http4s.HttpApp
 import com.engitano.awseffect.lambda.catsio.IOLambda
 import cats.effect.{Blocker, IO}
 import org.http4s.HttpApp
 import io.chrisdavenport.vault.Key
+import cats.effect.Sync
+import cats.FlatMap
+import cats.effect.ConcurrentEffect
+import cats.effect.ContextShift
 
-trait Http4sLambda extends IOLambda {
+trait IOHttp4sLambda extends IOLambda with Http4sLambda[IO] {
 
-    case class Http4sApp(service: HttpApp[IO], vaultKey: Key[LambdaRequestParams])
+    override def handler(blocker: Blocker): IO[com.engitano.awseffect.lambda.LambdaHandler[IO]] = _handler(blocker)
+}
 
-    def lambdaHandler(blocker: Blocker): IO[Http4sApp]
+trait Http4sLambda[F[_]] {
 
-    override def handler(blocker: Blocker): IO[com.engitano.awseffect.lambda.LambdaHandler[IO]] = 
-        lambdaHandler(blocker).map(h => Http4sHandler(blocker)(h.service, h.vaultKey))
+    case class Http4sApp(service: HttpApp[F], vaultKey: Key[LambdaRequestParams])
+
+    def lambdaRequestKey(implicit F: Sync[F]) = Key.newKey[F, LambdaRequestParams]
+
+    def lambdaHandler(blocker: Blocker, key: Key[LambdaRequestParams]): F[HttpApp[F]]
+
+    def _handler(blocker: Blocker)(implicit F: ConcurrentEffect[F], CS: ContextShift[F]): F[com.engitano.awseffect.lambda.LambdaHandler[F]] = 
+        lambdaRequestKey.flatMap { key => 
+        lambdaHandler(blocker, key).map(h => Http4sHandler(blocker)(h, key))
+    }
 }
