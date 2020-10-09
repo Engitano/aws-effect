@@ -12,7 +12,7 @@ object RequestContextAuthorizer {
 
         override val principalId: String = pId
 
-        override def apply[A: Decoder](key: String): Option[A] = c.get[A](key).fold(_ => None, _.some)
+        override def get[A: Decoder](key: String): Option[A] = c.get[A](key).fold(_ => None, _.some)
       })
     }
 
@@ -20,7 +20,7 @@ object RequestContextAuthorizer {
 }
 trait RequestContextAuthorizer {
     val principalId: String
-    def apply[A: Decoder](key: String): Option[A]
+    def get[A: Decoder](key: String): Option[A]
 }
 
 case class RequestIdentity(
