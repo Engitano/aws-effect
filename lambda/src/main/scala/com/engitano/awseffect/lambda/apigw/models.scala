@@ -1,9 +1,5 @@
 package com.engitano.awseffect.lambda.apigw
 
-case class RequestContextAuthorizer(
-    principalId: String
-)
-
 case class RequestIdentity(
     cognitoIdentityPoolId: Option[String],
     accountId: Option[String],
@@ -26,7 +22,7 @@ case class RequestContext(
     httpMethod: String,
     apiId: String,
     identity: Option[RequestIdentity] = None,
-    authorizer: Option[RequestContextAuthorizer] = None
+    authorizer: Option[Map[String, String]] = None
 )
 
 case class ProxyRequest(
