@@ -1,5 +1,28 @@
 package com.engitano.awseffect.lambda.apigw
 
+import cats.syntax.option._
+import io.circe.Decoder
+import io.circe.HCursor
+
+
+object RequestContextAuthorizer {
+    implicit def decoderForRequestContextAuthorizer: Decoder[RequestContextAuthorizer] = new Decoder[RequestContextAuthorizer]{
+
+      override def apply(c: HCursor): Decoder.Result[RequestContextAuthorizer] = c.get[String]("principalId").map(pId => new RequestContextAuthorizer {
+
+        override val principalId: String = pId
+
+        override def apply[A: Decoder](key: String): Option[A] = c.get[A](key).fold(_ => None, _.some)
+      })
+    }
+
+    def unapply(requestContextAuthorizer: RequestContextAuthorizer): Option[String] = requestContextAuthorizer.principalId.some
+}
+trait RequestContextAuthorizer {
+    val principalId: String
+    def apply[A: Decoder](key: String): Option[A]
+}
+
 case class RequestIdentity(
     cognitoIdentityPoolId: Option[String],
     accountId: Option[String],
@@ -22,7 +45,7 @@ case class RequestContext(
     httpMethod: String,
     apiId: String,
     identity: Option[RequestIdentity] = None,
-    authorizer: Option[Map[String, String]] = None
+    authorizer: Option[RequestContextAuthorizer] = None
 )
 
 case class ProxyRequest(
